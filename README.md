@@ -1,4 +1,4 @@
-# TG_Enfermedad-de-Chagas
+# TG Enfermedad de Chagas
 Implementación de las técnicas GWPCA (Geographically Weighted Principal Component Analysis) y GTWPCA (Geographically and Temporally Weighted Principal Component Analysis) para el análisis espacio-temporal de la enfermedad de Chagas en Colombia (2021–2023).
 
 Este trabajo forma parte de un trabajo de grado orientado al estudio de patrones espaciales y su evolución temporal a partir de variables socioambientales y epidemiológicas.

@@ -1,6 +1,3 @@
-# ======================================================
-# LIBRERÍAS NECESARIAS
-# ======================================================
 library(readxl)
 library(dplyr)
 library(lubridate)
@@ -119,8 +116,8 @@ variables_analisis <- c(
   "n_area_cabecera", 
   "n_area_centro_poblado", 
   "n_area_rural_disperso",
-  "area_predominante",   # ✅ moda de área (ordinal)
-  "estrato_moda",        # ✅ moda de estrato (ordinal)
+  "area_predominante",   
+  "estrato_moda",        
   "n_regimen_contributivo",
   "n_regimen_subsidiado",
   "n_regimen_excepcion",
@@ -135,7 +132,7 @@ X <- datos_completos %>%
   select(all_of(variables_analisis))
 
 
-X <- X[, apply(X, 2, function(col) sd(col, na.rm = TRUE) > 0)] # Eliminar columnas con varianza 0 (para no tener errores en el PCA)
+X <- X[, apply(X, 2, function(col) sd(col, na.rm = TRUE) > 0)] 
 X <- scale(X) %>% as.matrix() # Estandarizar
 
 # ======================================================
@@ -145,7 +142,6 @@ X <- scale(X) %>% as.matrix() # Estandarizar
 coords <- datos_completos[, c("X", "Y")] %>% as.matrix() # Matriz de coordenadas (longitud, latitud)
 nb <- knearneigh(coords, k = 4) |> knn2nb() # Identifica los k vecinos más cercanos para cada departamento basado en sus coordenadas
 lw <- nb2listw(nb, style = "W", zero.policy = TRUE) # Zero policy es TRUE para admitir que tenga departamentos sin vecinos -> Ej San Andres
-# Style w estandariza por filas para que los departamentos con más vecinos no influencien más (es la opción más equilibrada) 
 
 # Calcular para todas las variables en X
 resultados_moran <- data.frame(
@@ -248,31 +244,3 @@ cargas_promedio_gwpca <- Reduce("+", cargas_gwpca) / length(cargas_gwpca)
 
 print("Cargas promedio del GWPCA:")
 print(cargas_promedio_gwpca)
-
-
-
-mapa_pvt_simple <- function(resultados_gwpca, sf_obj, id_col = "depto_norm", n_comp = 3) {
-  var_list <- resultados_gwpca$varianza_explicada
-  var_exp <- do.call(rbind, var_list)
-  var_exp <- apply(var_exp, 2, as.numeric)
-  
-  n_comp_real <- min(n_comp, ncol(var_exp))
-  pvt_loc <- rowSums(var_exp[, 1:n_comp_real, drop = FALSE], na.rm = TRUE)
-  
-  sf_obj$pvt_pct <- pvt_loc
-  
-  ggplot(sf_obj) +
-    geom_sf(aes(fill = pvt_pct), color = "white", size = 0.2) +
-    scale_fill_viridis_c(
-      option = "cividis",
-      name = "PVT (%)",
-      labels = label_percent(accuracy = 1)
-    ) +
-    theme_void() +
-    theme(legend.position = "right")
-}
-
-# Uso
-pvt_map <- mapa_pvt_simple(resultados_gwpca, colombia, n_comp = 3)
-print(pvt_map)
-ggsave("GWPCA_PVT.png", pvt_map, width = 12, height = 4, dpi = 300)

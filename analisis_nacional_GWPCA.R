@@ -43,7 +43,7 @@ datos_agregados <- datos_epi %>%
     
     # Características demográficas
     edad_promedio = mean(as.numeric(EDAD), na.rm = TRUE),
-    n_mujeres = sum(SEXO == "F", na.rm = TRUE),   # en vez de proporción
+    n_mujeres = sum(SEXO == "F", na.rm = TRUE),   
     
     # Indicadores temporales
     mediana_incubacion = median(tiempo_incubacion, na.rm = TRUE),
@@ -51,7 +51,7 @@ datos_agregados <- datos_epi %>%
     tiempo_total_notificacion = median(as.numeric(FEC_NOT - INI_SIN), na.rm = TRUE),
     
     # Patrones espaciales
-    n_casos_importados = sum(caso_importado, na.rm = TRUE),  # en vez de proporción
+    n_casos_importados = sum(caso_importado, na.rm = TRUE),  
     
     # Distribución por tipo de área
     # usamos el factor predominante (moda) y además los conteos
@@ -61,7 +61,7 @@ datos_agregados <- datos_epi %>%
     n_area_rural_disperso = sum(AREA == "3", na.rm = TRUE),
     
     # Condiciones socioeconómicas
-    estrato_moda = as.numeric(names(which.max(table(estrato)))),  # mejor que promedio
+    estrato_moda = as.numeric(names(which.max(table(estrato)))), 
     # quitamos estrato_promedio por redundancia
     
     # Cobertura en salud (factores en vez de proporciones)
@@ -228,9 +228,6 @@ print(best_final)
 # ======================================================
 # 9. Ejecutar GWPCA
 # ======================================================
-# ------------------------------------------------------
-# Ejecutar GWPCA con la configuración óptima
-# ------------------------------------------------------
 # Mostrar resumen
 resumen_gwpca <- crear_resumen_gwpca(resultados_gwpca)
 print("Resumen GWPCA - Varianza explicada promedio por componente y rangos:")
@@ -244,3 +241,4 @@ cargas_promedio_gwpca <- Reduce("+", cargas_gwpca) / length(cargas_gwpca)
 
 print("Cargas promedio del GWPCA:")
 print(cargas_promedio_gwpca)
+

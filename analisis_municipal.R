@@ -1,8 +1,3 @@
-# ANALISIS_MUNICIPAL: Implementación de Indice de Moran / ACP / GWPCA (a nivel municipal) para Cundinamarca
-
-# ======================================================
-# 1. Librerías
-# ======================================================
 library(readxl)
 library(dplyr)
 library(lubridate)
@@ -113,7 +108,7 @@ sf_muni_cund <- sf_municipal %>%
 # ======================================================
 X_muni <- sf_muni_cund %>%
   st_drop_geometry() %>%
-  dplyr::select(-dpto_cnmbr, -mpio_cnmbr)   # quitamos identificadores
+  dplyr::select(-dpto_cnmbr, -mpio_cnmbr)   
 
 # Seleccionar solo columnas numéricas
 X_num_muni <- X_muni %>%
@@ -199,99 +194,3 @@ resultados_gwpca_muni <- gwpca(
   ancho_banda = 1.62845178,
   kernel = "boxcar"
 )
-
-# ======================================================
-# 10. Indicador GWPCA
-# ======================================================
-
-# Extraer varianza local (2 primeras componentes)
-var_local <- do.call(rbind, resultados_gwpca_muni$varianza_explicada)[, 1:2, drop = FALSE]
-ponderaciones <- var_local / rowSums(var_local, na.rm = TRUE)
-
-# Extraer y combinar las puntuaciones locales
-scores_locales_list <- resultados_gwpca_muni$puntuaciones
-scores_locales <- do.call(rbind, scores_locales_list)
-
-# Verificar que tengan misma longitud
-n_obs <- min(nrow(scores_locales), nrow(ponderaciones))
-scores_locales <- scores_locales[1:n_obs, , drop = FALSE]
-ponderaciones <- ponderaciones[1:n_obs, , drop = FALSE]
-
-# Calcular el indicador ponderado (2 primeras componentes)
-indicador_gwpca <- rowSums(scores_locales[, 1:2] * ponderaciones, na.rm = TRUE)
-
-# Escalar de 0 a 100 (más interpretativo)
-indicador_gwpca_esc <- scales::rescale(indicador_gwpca, to = c(0, 100))
-
-# Agregar al objeto espacial
-sf_muni_cund_completo$indicador_gwpca <- NA
-sf_muni_cund_completo$indicador_gwpca[1:length(indicador_gwpca_esc)] <- indicador_gwpca_esc
-
-# ======================================================
-# 11. Mapa del indicador
-# ======================================================
-ggplot(sf_muni_cund_completo) +
-  geom_sf(aes(fill = indicador_gwpca)) +
-  scale_fill_viridis_c(option = "plasma", name = "Indicador GWPCA (%)") +
-  theme_minimal() +
-  labs(
-    title = "Indicador Espacial GWPCA (2 primeras componentes)",
-    subtitle = "Municipios de Cundinamarca (escala 0–100)"
-  )
-
-# ======================================================
-# 12. Mapa PVT (% varianza explicada local)
-# ======================================================
-mapa_pvt_muni <- function(resultados_gwpca, sf_obj, id_col = "mpio_cnmbr", n_comp = 2) {
-  var_list <- resultados_gwpca$varianza_explicada
-  var_exp <- do.call(rbind, var_list)
-  var_exp <- apply(var_exp, 2, as.numeric)
-  
-  n_comp_real <- min(n_comp, ncol(var_exp))
-  pvt_loc <- rowSums(var_exp[, 1:n_comp_real, drop = FALSE], na.rm = TRUE) * 100
-  
-  # Municipios analizados
-  ids_analizados <- sf_obj[[id_col]][1:length(pvt_loc)]
-  df_pvt <- data.frame(
-    pvt_pct = pvt_loc
-  )
-  df_pvt[[id_col]] <- ids_analizados
-  
-  # Unir al shapefile
-  sf_pvt <- sf_obj %>%
-    left_join(df_pvt, by = id_col)
-  
-  ggplot(sf_pvt) +
-    geom_sf(aes(fill = pvt_pct), color = "white", size = 0.2) +
-    scale_fill_viridis_c(
-      option = "cividis",
-      name = "PVT (%)",
-      labels = scales::label_percent(accuracy = 0.1, scale = 1),
-      na.value = "grey90"
-    ) +
-    guides(
-      fill = guide_colorbar(
-        title.position = "top",       
-        title.hjust = 0.5,            
-        title.theme = element_text(size = 14),  # ← tamaño del título más pequeño
-        label.theme = element_text(size = 13)                   # ← tamaño de los porcentajes
-      )
-    ) +
-    theme_void() +
-    theme(
-      legend.position = "right",
-      plot.title = element_blank(),
-      plot.subtitle = element_blank()
-    )
-}
-
-# Ejecutar
-pvt_plot_muni <- mapa_pvt_muni(resultados_gwpca_muni, sf_muni_cund_completo, n_comp = 2)
-
-ggsave(
-  filename = "PVT_GWPCA_Cundinamarca.png", 
-  plot = pvt_plot_muni, width = 14, height = 6, dpi = 300
-)
-
-
-

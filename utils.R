@@ -1,7 +1,3 @@
-# ======================================================
-# utils.R: Funciones auxiliares para GWPCA / GTWPCA
-# ======================================================
-
 library(GWmodel)
 library(sp)
 library(spdep)
@@ -329,3 +325,4 @@ get_moda <- function(x) {
   ux <- unique(x)
   ux[which.max(tabulate(match(x, ux)))]
 }
+

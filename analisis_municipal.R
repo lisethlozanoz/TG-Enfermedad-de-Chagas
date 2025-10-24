@@ -1,4 +1,4 @@
-# ANALISIS_MUNICIPAL GWPCA: Implementación de Indice de Moran / ACP / GWPCA (a nivel municipal) para Cundinamarca
+# ANALISIS_MUNICIPAL: Implementación de Indice de Moran / ACP / GWPCA (a nivel municipal) para Cundinamarca
 
 # ======================================================
 # 1. Librerías
@@ -292,5 +292,6 @@ ggsave(
   filename = "PVT_GWPCA_Cundinamarca.png", 
   plot = pvt_plot_muni, width = 14, height = 6, dpi = 300
 )
+
 
 
